@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Privacy Policy – Hockey Planner</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a1f0a; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
+    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #0a1f0a; z-index: 9999; }
+    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
+    #__bundler_placeholder { color: #999; font-size: 14px; }
+  </style>
+  <noscript>
+    <style>#__bundler_loading { display: none; }</style>
+    <div style="position:fixed;bottom:12px;left:12px;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#999;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);z-index:10000;">
+      This page requires JavaScript to display.
+    </div>
+  </noscript>
+</head>
+<body>
+  <div id="__bundler_thumbnail">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0a1f0a"></rect>
+    <text x="600" y="400" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="120" fill="#a8e02e">🔒</text>
+    <text x="600" y="500" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="40" fill="#ffffff" letter-spacing="3">PRIVACY POLICY</text>
+    <text x="600" y="540" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#6a8a6a">Hockey Planner</text>
+  </svg>
+</div>
+  <div id="__bundler_loading">Unpacking...</div>
+
+  <script>
+    
+document.addEventListener('DOMContentLoaded', async function() {
+  const loading = document.getElementById('__bundler_loading');
+  function setStatus(msg) { if (loading) loading.textContent = msg; }
+
+  // Error sink persists across replaceWith since it's on window, not the DOM.
+  window.addEventListener('error', function(e) {
+    var p = document.body || document.documentElement;
+    var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
+    d.id = '__bundler_err';
+    d.style.cssText = 'position:fixed;bottom:12px;left:12px;right:12px;font:12px/1.4 ui-monospace,monospace;background:#2a1215;color:#ff8a80;padding:10px 14px;border-radius:8px;border:1px solid #5c2b2e;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    d.textContent = (d.textContent ? d.textContent + String.fromCharCode(10) : '') +
+      '[bundle] ' + (e.message || e.type) +
+      (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
+  }, true);
+
+  try {
+    const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
+    const templateEl = document.querySelector('script[type="__bundler/template"]');
+    if (!manifestEl || !templateEl) {
+      setStatus('Error: missing bundle data');
+      console.error('[bundler] Missing script tags — manifestEl:', !!manifestEl, 'templateEl:', !!templateEl);
+      return;
+    }
+
+    const manifest = JSON.parse(manifestEl.textContent);
+    let template = JSON.parse(templateEl.textContent);
+
+    const uuids = Object.keys(manifest);
+    setStatus('Unpacking ' + uuids.length + ' assets...');
+
+    const blobUrls = {};
+    await Promise.all(uuids.map(async (uuid) => {
+      const entry = manifest[uuid];
+      try {
+        const binaryStr = atob(entry.data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        let finalBytes = bytes;
+        if (entry.compressed) {
+          if (typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(bytes);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            finalBytes = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else {
+            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+          }
+        }
+
+        blobUrls[uuid] = URL.createObjectURL(new Blob([finalBytes], { type: entry.mime }));
+      } catch (err) {
+        console.error('Failed to decode asset ' + uuid + ':', err);
+        blobUrls[uuid] = URL.createObjectURL(new Blob([], { type: entry.mime }));
+      }
+    }));
+
+    const extResEl = document.querySelector('script[type="__bundler/ext_resources"]');
+    const extResources = extResEl ? JSON.parse(extResEl.textContent) : [];
+    const resourceMap = {};
+    for (const entry of extResources) {
+      if (blobUrls[entry.uuid]) resourceMap[entry.id] = blobUrls[entry.uuid];
+    }
+
+    setStatus('Rendering...');
+    for (const uuid of uuids) template = template.split(uuid).join(blobUrls[uuid]);
+
+    // Strip integrity + crossorigin — blob URLs from a file:// document inherit
+    // a null origin, so crossorigin forces a CORS fetch that SRI then rejects.
+    // The manifest bytes are ours; SRI protects against CDN compromise, not this.
+    template = template.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '');
+
+    const resourceScript = '<script>window.__resources = ' +
+      JSON.stringify(resourceMap).split('</' + 'script>').join('<\\/' + 'script>') +
+      ';</' + 'script>';
+    // Inject after <head> so the DOCTYPE stays first; prepending the script
+    // would push the parser into quirks mode. DOMParser always emits a <head>
+    // (synthesizing one if the source HTML omitted it) but may carry
+    // attributes through, so match the full opening tag. slice() rather than
+    // replace() keeps us clear of $-pattern substitution in resourceScript.
+    const headOpen = template.match(/<head[^>]*>/i);
+    if (headOpen) {
+      const i = headOpen.index + headOpen[0].length;
+      template = template.slice(0, i) + resourceScript + template.slice(i);
+    }
+
+    // Parse the template and swap the root element. Scripts inserted via
+    // DOMParser/replaceWith are inert per spec — re-create each with
+    // createElement so they execute, awaiting onload for src scripts to
+    // preserve ordering (React before ReactDOM before Babel before text/babel).
+    const doc = new DOMParser().parseFromString(template, 'text/html');
+    document.documentElement.replaceWith(doc.documentElement);
+    const dead = Array.from(document.scripts);
+    for (const old of dead) {
+      const s = document.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      // text/babel scripts with a src: fetch and inline. transformScriptTags
+      // does XHR against the src, but blob:null/ from a file:// origin is
+      // silently dropped. Inlining makes it a plain inline babel script,
+      // which transformScriptTags handles unconditionally.
+      if ((s.type === 'text/babel' || s.type === 'text/jsx') && s.src) {
+        const r = await fetch(s.src);
+        s.textContent = await r.text();
+        s.removeAttribute('src');
+      }
+      const p = s.src ? new Promise(function(r) { s.onload = s.onerror = r; }) : null;
+      old.replaceWith(s);
+      if (p) await p;
+    }
+    // Babel standalone auto-transforms type=text/babel on DOMContentLoaded,
+    // which fired before we swapped the document. Trigger manually if present.
+    if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
+      window.Babel.transformScriptTags();
+    }
+  } catch (err) {
+    setStatus('Error unpacking: ' + err.message);
+    console.error('Bundle unpack error:', err);
+  }
+});
+
+  </script>
+
+  <script type="__bundler/manifest">
+{}
+  </script>
+
+  <script type="__bundler/ext_resources">
+[]
+  </script>
+
+  <script type="__bundler/template">
+"<!DOCTYPE html>\n<html lang=\"en\"><head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Privacy Policy – Hockey Planner<\u002Ftitle>\n<style>\n  :root {\n    --bg: #0d1a0d;\n    --bg-2: #142414;\n    --card: #1a2e1a;\n    --border: #2a4a2a;\n    --lime: #b2f020;\n    --lime-soft: #c7f560;\n    --text: #ffffff;\n    --muted: #8aa68a;\n    --warn: #ffa940;\n  }\n  * { box-sizing: border-box; }\n  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }\n  body { min-height: 100vh; }\n  a { color: var(--lime); text-decoration: none; border-bottom: 1px dashed rgba(178, 240, 32, 0.4); }\n  a:hover { border-bottom-color: var(--lime); }\n\n  .top {\n    border-bottom: 1px solid var(--border);\n    background: var(--bg-2);\n  }\n  .top-inner {\n    max-width: 880px;\n    margin: 0 auto;\n    padding: 18px 32px;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 16px;\n  }\n  .brand {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    font-weight: 900;\n    letter-spacing: 1px;\n    font-size: 16px;\n  }\n  .brand .stick { font-size: 22px; }\n  .back {\n    color: var(--muted);\n    font-size: 14px;\n    border: 1px solid var(--border);\n    padding: 8px 14px;\n    border-radius: 8px;\n    border-bottom: 1px solid var(--border);\n  }\n  .back:hover { color: var(--text); border-color: var(--lime); }\n\n  .hero {\n    max-width: 880px;\n    margin: 0 auto;\n    padding: 64px 32px 28px;\n  }\n  .eyebrow {\n    color: var(--lime);\n    font-weight: 800;\n    letter-spacing: 3px;\n    font-size: 12px;\n    text-transform: uppercase;\n    margin-bottom: 16px;\n  }\n  h1 {\n    font-size: 56px;\n    font-weight: 900;\n    letter-spacing: -1.5px;\n    line-height: 1.05;\n    margin: 0 0 18px;\n  }\n  .meta {\n    color: var(--muted);\n    font-size: 15px;\n    display: flex;\n    flex-wrap: wrap;\n    gap: 8px 18px;\n    align-items: center;\n  }\n  .pill {\n    display: inline-flex;\n    align-items: center;\n    gap: 6px;\n    background: rgba(178, 240, 32, 0.1);\n    border: 1px solid rgba(178, 240, 32, 0.3);\n    color: var(--lime);\n    padding: 4px 10px;\n    border-radius: 999px;\n    font-size: 12px;\n    font-weight: 700;\n    letter-spacing: 0.5px;\n  }\n\n  .summary {\n    max-width: 880px;\n    margin: 24px auto 0;\n    padding: 0 32px;\n  }\n  .summary-grid {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 14px;\n  }\n  .sum-card {\n    background: var(--card);\n    border: 1px solid var(--border);\n    border-radius: 14px;\n    padding: 18px;\n  }\n  .sum-card .icon {\n    font-size: 24px;\n    margin-bottom: 10px;\n  }\n  .sum-card h3 {\n    margin: 0 0 6px;\n    font-size: 15px;\n    font-weight: 800;\n    color: var(--lime);\n  }\n  .sum-card p {\n    margin: 0;\n    color: var(--muted);\n    font-size: 13px;\n    line-height: 1.5;\n  }\n\n  main {\n    max-width: 880px;\n    margin: 48px auto 80px;\n    padding: 0 32px;\n  }\n  section {\n    margin-bottom: 40px;\n  }\n  h2 {\n    font-size: 22px;\n    font-weight: 800;\n    margin: 0 0 12px;\n    color: var(--text);\n    display: flex;\n    align-items: baseline;\n    gap: 12px;\n  }\n  h2 .num {\n    color: var(--lime);\n    font-size: 14px;\n    font-weight: 800;\n    letter-spacing: 2px;\n  }\n  h3.sub {\n    font-size: 15px;\n    font-weight: 800;\n    color: var(--lime-soft);\n    margin: 18px 0 6px;\n    letter-spacing: 0.3px;\n  }\n  p { line-height: 1.65; color: #d6e6d6; font-size: 16px; margin: 0 0 12px; }\n  ul {\n    list-style: none;\n    padding: 0;\n    margin: 0 0 12px;\n  }\n  ul li {\n    position: relative;\n    padding: 6px 0 6px 22px;\n    color: #d6e6d6;\n    font-size: 16px;\n    line-height: 1.55;\n  }\n  ul li::before {\n    content: '';\n    position: absolute;\n    left: 4px;\n    top: 14px;\n    width: 6px;\n    height: 6px;\n    border-radius: 2px;\n    background: var(--lime);\n  }\n  .callout {\n    background: linear-gradient(180deg, rgba(178, 240, 32, 0.08), rgba(178, 240, 32, 0.02));\n    border: 1px solid rgba(178, 240, 32, 0.25);\n    border-radius: 14px;\n    padding: 18px 20px;\n    color: #e8f5d6;\n    font-size: 15px;\n    line-height: 1.6;\n  }\n  .callout strong { color: var(--lime); }\n\n  .contact-card {\n    background: var(--card);\n    border: 1px solid var(--border);\n    border-radius: 16px;\n    padding: 28px;\n    display: flex;\n    flex-direction: column;\n    gap: 6px;\n  }\n  .contact-card .label {\n    color: var(--muted);\n    font-size: 12px;\n    letter-spacing: 1.5px;\n    text-transform: uppercase;\n    font-weight: 800;\n  }\n  .contact-card .email {\n    font-size: 22px;\n    font-weight: 800;\n    color: var(--lime);\n    border: none;\n  }\n\n  footer {\n    border-top: 1px solid var(--border);\n    background: var(--bg-2);\n    padding: 28px 32px;\n    text-align: center;\n    color: var(--muted);\n    font-size: 13px;\n  }\n  footer .row {\n    display: flex;\n    justify-content: center;\n    gap: 18px;\n    flex-wrap: wrap;\n    margin-bottom: 8px;\n  }\n  footer a { color: var(--muted); border: none; }\n  footer a:hover { color: var(--lime); }\n\n  @media (max-width: 640px) {\n    h1 { font-size: 38px; }\n    .hero { padding: 40px 20px 20px; }\n    .summary, main { padding: 0 20px; }\n    .summary-grid { grid-template-columns: 1fr; }\n    .top-inner { padding: 14px 20px; }\n  }\n<\u002Fstyle>\n<\u002Fhead>\n<body>\n\n\n\n<div class=\"top\">\n  <div class=\"top-inner\">\n    <div class=\"brand\"><span class=\"stick\">🏑<\u002Fspan> HOCKEY PLANNER<\u002Fdiv>\n    <a class=\"back\" href=\"Hockey Planner Promo.html\">← Back<\u002Fa>\n  <\u002Fdiv>\n<\u002Fdiv>\n\n<div class=\"hero\">\n  <div class=\"eyebrow\">Legal<\u002Fdiv>\n  <h1>Privacy Policy<\u002Fh1>\n  <div class=\"meta\">\n    <span class=\"pill\">● Last updated May 8, 2026<\u002Fspan>\n    <span>Hockey Planner — Tools for every coach and trainer<\u002Fspan>\n  <\u002Fdiv>\n<\u002Fdiv>\n\n<div class=\"summary\">\n  <div class=\"summary-grid\">\n    <div class=\"sum-card\">\n      <div class=\"icon\">🔒<\u002Fdiv>\n      <h3>No personal data<\u002Fh3>\n      <p>We don't collect, store, or transmit any personal information about you or your players.<\u002Fp>\n    <\u002Fdiv>\n    <div class=\"sum-card\">\n      <div class=\"icon\">📱<\u002Fdiv>\n      <h3>Stays on device<\u002Fh3>\n      <p>Teams, lineups and plans live only on your phone. Uninstall the app and they're gone.<\u002Fp>\n    <\u002Fdiv>\n    <div class=\"sum-card\">\n      <div class=\"icon\">🚫<\u002Fdiv>\n      <h3>No tracking<\u002Fh3>\n      <p>Zero analytics. Zero advertising. Zero behavioral profiling. Ever.<\u002Fp>\n    <\u002Fdiv>\n  <\u002Fdiv>\n<\u002Fdiv>\n\n<main>\n\n<section>\n  <h2><span class=\"num\">01<\u002Fspan> Introduction<\u002Fh2>\n  <p>Hockey Planner (\"the App\") is a field hockey lineup and substitution manager for youth teams. This Privacy Policy explains how we handle your information when you use the App.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">02<\u002Fspan> Data We Collect<\u002Fh2>\n  <div class=\"callout\"><strong>We do not collect any personal data.<\u002Fstrong> Everything you enter stays on your device.<\u002Fdiv>\n  <p style=\"margin-top:14px;\">The App stores all data locally on your device, including:<\u002Fp>\n  <ul>\n    <li>Team names and player names you enter<\u002Fli>\n    <li>Lineups, match plans, and formations you create<\u002Fli>\n    <li>Player position assignments<\u002Fli>\n    <li>Your language preference (Dutch or English)<\u002Fli>\n    <li>Your premium purchase status<\u002Fli>\n  <\u002Ful>\n  <p>This data never leaves your device. We do not have access to it, and it is not transmitted to any server.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">03<\u002Fspan> Third-Party Services<\u002Fh2>\n  <p>The App uses the following third-party services:<\u002Fp>\n  <h3 class=\"sub\">Google Play In-App Billing<\u002Fh3>\n  <p>If you purchase the Premium upgrade, the transaction is processed by Google Play. Google handles the payment and may collect information as described in their privacy policy. We do not receive or store your payment details.<\u002Fp>\n  <h3 class=\"sub\">RevenueCat<\u002Fh3>\n  <p>We use RevenueCat to manage in-app purchases and verify your premium status. RevenueCat may process an anonymous user identifier to track your purchase. No personal information (name, email, etc.) is shared with RevenueCat by the App. For more information, see RevenueCat's privacy policy at <a href=\"https://www.revenuecat.com/privacy\" target=\"_blank\" rel=\"noopener\">revenuecat.com/privacy<\u002Fa>.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">04<\u002Fspan> Data Storage and Security<\u002Fh2>\n  <p>All app data is stored locally on your device using AsyncStorage. If you uninstall the App, all stored data will be permanently deleted. We do not maintain any backups of your data.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">05<\u002Fspan> Children's Privacy<\u002Fh2>\n  <p>The App is designed for coaches and team managers of youth hockey teams. The App does not knowingly collect personal information from children. Player names entered by the coach or team manager are stored only on the device and are not transmitted anywhere.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">06<\u002Fspan> Analytics and Tracking<\u002Fh2>\n  <p>The App does not use any analytics, tracking, or advertising frameworks. We do not track your usage, location, or behavior.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">07<\u002Fspan> Data Sharing<\u002Fh2>\n  <p>We do not share, sell, or transfer any data to third parties. The only external communication occurs during in-app purchase verification through Google Play and RevenueCat.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">08<\u002Fspan> Permissions<\u002Fh2>\n  <p>The App requests the following permissions:<\u002Fp>\n  <ul>\n    <li><strong style=\"color:var(--lime-soft);\">Vibration<\u002Fstrong> — Used to alert coaches about substitutions during matches. No data is collected.<\u002Fli>\n    <li><strong style=\"color:var(--lime-soft);\">In-App Billing<\u002Fstrong> — Used for the optional Premium upgrade purchase through Google Play.<\u002Fli>\n  <\u002Ful>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">09<\u002Fspan> Changes to This Policy<\u002Fh2>\n  <p>We may update this Privacy Policy from time to time. Any changes will be reflected in the App or on our website. Your continued use of the App after changes constitutes acceptance of the updated policy.<\u002Fp>\n<\u002Fsection>\n\n<section>\n  <h2><span class=\"num\">10<\u002Fspan> Contact<\u002Fh2>\n  <p>If you have any questions about this Privacy Policy, please get in touch:<\u002Fp>\n  <div class=\"contact-card\">\n    <span class=\"label\">Email<\u002Fspan>\n    <a class=\"email\" href=\"mailto:support@kpworks.nl\">support@kpworks.nl<\u002Fa>\n  <\u002Fdiv>\n<\u002Fsection>\n\n<\u002Fmain>\n\n<footer>\n  <div class=\"row\">\n    <a href=\"Hockey Planner Promo.html\">← Back to Hockey Planner<\u002Fa>\n    <a href=\"mailto:support@kpworks.nl\">support@kpworks.nl<\u002Fa>\n  <\u002Fdiv>\n  <div>© 2026 Hockey Planner. All rights reserved.<\u002Fdiv>\n<\u002Ffooter>\n\n\n\n<\u002Fbody><\u002Fhtml>"
+  </script>
+</body>
+</html>
